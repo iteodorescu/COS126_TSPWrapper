@@ -37,13 +37,6 @@ public final class StdMap {
             return (double)Math.round(value * 100000d) / 100000d;
         }
 
-        // returns Euclidean distance - in case of offline?
-        public double euclideanDistTo(Location that) {
-            double dlng = lng - that.lng;
-            double dlat = lat - that.lat;
-            return Math.sqrt(dlng*dlng + dlat*dlat);
-        }
-
         public String toString() {
             return lng + "," + lat;
         }
@@ -225,7 +218,7 @@ public final class StdMap {
     private static final int MAX_URL_CHARS = 8000; // it's actually 8192 but just in case, leaving space for the key
 
     // needs to be setup
-    private static Hashtable<Location, Set<Path>> graph;
+    private static Hashtable<Location, Hashtable<Location, Path>> graph;
     private static Set<Path> visiblePaths;
     private static String STATIC_MAP_API_KEY;
     private static String DIRECTIONS_API_KEY;
@@ -268,14 +261,14 @@ public final class StdMap {
     // adds point to the graph to be displayed
     // add records *possible* paths between points
     private static void addPoint(Location l) {
-        if (StdMap.graph == null) StdMap.graph = new Hashtable<Location, Set<Path>>();
+        if (StdMap.graph == null) StdMap.graph = new Hashtable<Location, Hashtable<Location, Path>>();
         if (StdMap.graph.containsKey(l)) return;
-        Set<Path> s = new HashSet<Path>();
+        Hashtable<Location, Path> s = new Hashtable<Location, Path>();
         for (Location it : StdMap.graph.keySet()) {
             Path p = std.new Path(l, it);
-            Set<Path> sl = StdMap.graph.get(it);
-            s.add(p);
-            sl.add(p);
+            Hashtable<Location, Path> sl = StdMap.graph.get(it);
+            s.put(it, p);
+            sl.put(l, p);
         }
         StdMap.graph.put(l, s);
     }
@@ -357,6 +350,18 @@ public final class StdMap {
         url.append(StdMap.STATIC_MAP_API_KEY);
 
         return url.toString();
+    }
+
+    private static double getMapDistance(Location a, Location b) {
+        if (graph.containsKey(a) && graph.containsKey(b)) {
+            return graph.get(a).get(b).getDistance();
+        }
+        Path p = std.new Path(a, b);
+        return p.getDistance();
+    }
+
+    public static double getMapDistance(double startLng, double startLat, double endLng, double endLat) {
+        return StdMap.getMapDistance(std.new Location(startLng, startLat), std.new Location(endLng, endLat));
     }
 
     /*
@@ -441,18 +446,10 @@ public final class StdMap {
     // remove location from map
     private static void removePoint(Location l) {
         if(StdMap.graph == null || !StdMap.graph.containsKey(l)) return;
-        Set<Path> s = StdMap.graph.get(l);
         for (Location it : StdMap.graph.keySet()) {
             if (it.equals(l)) continue;
-            Set<Path> sl = StdMap.graph.get(it);
-            Path found = null;
-            for (Path p : sl) {
-                if (p.start.equals(l) || p.end.equals(l)) {
-                    found = p;
-                    break;
-                }
-            }
-            if (found != null) sl.remove(found);
+            Hashtable<Location, Path> sl = StdMap.graph.get(it);
+            sl.remove(l);
         }
         StdMap.graph.remove(l);
         Set<Path> save = new HashSet<Path>(StdMap.visiblePaths);
@@ -528,21 +525,21 @@ public final class StdMap {
             StdMap.graph = null;
             return;
         }
-        StdMap.graph = new Hashtable<Location, Set<Path>>();
+        StdMap.graph = new Hashtable<Location, Hashtable<Location, Path>>();
 
         for (int i = 0; i < l.length; i++) {
             // don't allow duplicates
             if (StdMap.graph.containsKey(l[i])) continue;
-            StdMap.graph.put(l[i], new HashSet<Path>());
+            StdMap.graph.put(l[i], new Hashtable<Location, Path>());
         }
 
         for (Location start : StdMap.graph.keySet()) {
-            Set<Path> s = StdMap.graph.get(start);
+            Hashtable<Location, Path> s = StdMap.graph.get(start);
             for (Location end : StdMap.graph.keySet()) {
                 Path p = std.new Path(start, end);
-                s.add(p);
-                Set<Path> e = StdMap.graph.get(end);
-                e.add(p);
+                s.put(end, p);
+                Hashtable<Location, Path> e = StdMap.graph.get(end);
+                e.put(start, p);
             }
         }
     }

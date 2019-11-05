@@ -14,13 +14,14 @@ public class TSPMap {
         int height = StdIn.readInt();
         StdMap.setMapScreenSize(width, height);
 
-        Tour tour = new Tour();
+        Tour tour = new Tour(true);
         while (!StdIn.isEmpty()) {
             double x = StdIn.readDouble();
             double y = StdIn.readDouble();
             String s = StdIn.readLine();
 
             Point p = new Point(x, y);
+            StdMap.addPoint(x, y);
 
             if (isSmallestHeuristic) tour.insertSmallest(p);
             else tour.insertNearest(p);
@@ -50,6 +51,7 @@ public class TSPMap {
             double lat = Double.parseDouble(coords[1].trim());
 
             StdMap.addPoint(lng, lat);
+            
             if (i == 0) {
                 firstLng = lng;
                 firstLat = lat;

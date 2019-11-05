@@ -28,6 +28,12 @@ public class Point {
         return Math.sqrt(dx*dx + dy*dy);
     }
 
+    // returns the Euclidean distance between the two points
+    public double distanceTo(Point that, boolean usingMapDistance) {
+        if (usingMapDistance) return StdMap.getMapDistance(this.x, this.y, that.x, that.y);
+        return distanceTo(that);
+    }
+
     // draws this point to standard drawing
     public void draw() {
         StdDraw.point(x, y);
