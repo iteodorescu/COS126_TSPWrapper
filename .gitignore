@@ -1,0 +1,10 @@
+Tour.java
+Constants*
+*~
+~*
+*.class
+*.jar
+org/
+META-INF/
+.idea/
+.vscode/
