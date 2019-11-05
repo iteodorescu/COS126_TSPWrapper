@@ -1,4 +1,5 @@
-40.39460 -74.65740 Firestone Library
+500 500
+40.34960 -74.65740 Firestone Library
 40.35025 -74.65219 CS Department
 40.34187 -74.65904 Wawa
 40.34720 -74.66155 UStore

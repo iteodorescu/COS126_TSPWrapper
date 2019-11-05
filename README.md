@@ -22,7 +22,7 @@ public class Constants {
     public static final String STATIC_MAPS_API_KEY = [YOUR GOOGLE MAPS STATIC MAPS API KEY HERE];
 
     public static void main(String[] args) {
-        System.out.println("This is the private API constants file.");
+        StdOut.println("This is the private API constants file.");
     }
 }
 ```

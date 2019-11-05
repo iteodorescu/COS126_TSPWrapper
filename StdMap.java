@@ -1,4 +1,6 @@
 import java.util.*;
+import java.net.*;
+import java.io.*;
 import java.lang.Exception;
 import java.util.regex.Pattern;
 import org.json.*;
@@ -176,6 +178,40 @@ public final class StdMap {
         public String getPathId() {
             if (!isPossible) return null;
             return pathId;
+        }
+    }
+
+    private static final class Request {
+        // adapted from https://stackoverflow.com/questions/1359689/how-to-send-http-request-in-java
+        public static String request(String targetURL) {
+            HttpURLConnection connection = null;
+    
+            try {
+                //Create connection
+                URL url = new URL(targetURL);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.setUseCaches(true);
+    
+                //Get Response
+                InputStream is = connection.getInputStream();
+                BufferedReader rd = new BufferedReader(new InputStreamReader(is));
+                StringBuilder response = new StringBuilder(); // or StringBuffer if Java version 5+
+                String line;
+                while ((line = rd.readLine()) != null) {
+                    response.append(line);
+                    response.append('\r');
+                }
+                rd.close();
+                return response.toString();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            } finally {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            }
         }
     }
 
