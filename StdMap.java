@@ -52,8 +52,8 @@ public final class StdMap {
         // path stats
         private double distance; // in meters
         private final boolean isPossible;
-    /* private final Location boundaryNE;
-    private final Location boundarySW; */
+        private final Location boundaryNE;
+        private final Location boundarySW;
 
 
         // constructors (also perform call to API)
@@ -72,13 +72,24 @@ public final class StdMap {
                     assert(res.has("routes"));
                     JSONObject route = res.getJSONArray("routes").getJSONObject(0);
                     JSONArray legs = route.getJSONArray("legs");
+                    JSONObject bounds = route.getJSONObject("bounds");
+
+                    // get path id
                     this.pathId = route.getJSONObject("overview_polyline").getString("points");
                     this.isPossible = true;
+
+                    // get distance
                     this.distance = 0d;
                     for (int i = 0; i < legs.length(); i++) {
                         JSONObject leg = legs.getJSONObject(i);
                         this.distance += leg.getJSONObject("distance").getInt("value");
                     }
+
+                    // get bounds
+                    JSONObject ne = bounds.getJSONObject("northeast");
+                    JSONObject sw = bounds.getJSONObject("southwest");
+                    this.boundaryNE = std.new Location(ne.getDouble("lng"), ne.getDouble("lat"));
+                    this.boundarySW = std.new Location(sw.getDouble("lng"), sw.getDouble("lat"));
                     return;
                 }
                 case "MAX_WAYPOINTS_EXCEEDED":
@@ -101,6 +112,8 @@ public final class StdMap {
             this.distance = -1;
             this.pathId = null;
             this.isPossible = false;
+            this.boundaryNE = null;
+            this.boundarySW = null;
         }
 
         public Path(double startLng, double startLat, double endLng, double endLat) {
@@ -151,7 +164,7 @@ public final class StdMap {
             return isPossible;
         }
 
-        /*
+        
         // returns W, E, S, N boundaries in this order or null if the path is not possible
         // Boundaries:
         // West (lowest lng/x value), East (highest lng/x value)
@@ -166,7 +179,7 @@ public final class StdMap {
             ret[2] = boundarySW.lat;
             ret[3] = boundaryNE.lat;
             return ret;
-        }*/
+        }
         // returns the path id if the path is possible, otherwise return null
         public String getPathId() {
             if (!isPossible) return null;
@@ -320,7 +333,6 @@ public final class StdMap {
 
     private static String createMapUrl() { // include API key in parameters
         assert(StdMap.graph != null);
-        // targetURL + '?' + urlParameters + "&key=" + key
         StringBuilder url = new StringBuilder(STATIC_MAP_URL);
 
         // size
@@ -338,7 +350,6 @@ public final class StdMap {
         }
 
         if (StdMap.visiblePaths != null) {
-            boolean isFirst = true;
             for (Path p : StdMap.visiblePaths) {
                 assert(p.getPathId() != null);
                 addToUrl(url, "&path=weight:3%7Ccolor:" + StdMap.pathColor + "ff%7Cenc:" + p.getPathId());
@@ -364,7 +375,7 @@ public final class StdMap {
         return StdMap.getMapDistance(std.new Location(startLng, startLat), std.new Location(endLng, endLat));
     }
 
-    /*
+    
     // this was useless :(
     // returns W, E, S, N boundaries in this order
     private static double[] getBoundaries() {
@@ -421,8 +432,8 @@ public final class StdMap {
         assert(StdMap.graph != null);
         if (StdMap.center != null) return StdMap.center; // was setup by user
         double[] boundaries = getBoundaries();
-        return new Location((boundaries[0]+boundaries[1])/2.0, (boundaries[2]+boundaries[3])/2.0);
-    }*/
+        return std.new Location((boundaries[0]+boundaries[1])/2.0, (boundaries[2]+boundaries[3])/2.0);
+    }
 
     // opens map using StdDraw
     // takes in Google Maps Static Maps API key as argument
@@ -499,8 +510,8 @@ public final class StdMap {
     // set map dimensions (on screen)
     // calling with nonpositive arguments will just leave the default options
     public static void setMapScreenSize(int width, int height) {
-        StdMap.canvasWidth = width <= 0? width : DEFAULT_MAP_WIDTH;
-        StdMap.canvasHeight = height <= 0? height : DEFAULT_MAP_HEIGHT;
+        StdMap.canvasWidth = width > 0? width : DEFAULT_MAP_WIDTH;
+        StdMap.canvasHeight = height > 0? height : DEFAULT_MAP_HEIGHT;
     }
 
     public static void setPathColor(String s) {
@@ -587,9 +598,6 @@ public final class StdMap {
             return false;
         }
 
-        // check directions API key
-        Location CSDept = std.new Location(40.35025, -74.65219);
-        Location Wawa = std.new Location(40.34187, -74.65904);
         try {
             Request.request("https://maps.googleapis.com/maps/api/directions/json?" +
                 "mode=walking&origin=40.35025,-74.65219&destination=40.34187,%20-74.65904" +
