@@ -524,14 +524,16 @@ public final class StdMap {
     }
 
     public static void setPathColor(String s) {
+        if (s.charAt(0) == '#') s = "0x" + s.substring(1);
         if (!Pattern.matches("^0(x|X)([0-9a-fA-F]){6}$", s))
-            throw new IllegalArgumentException("Path color must be a hex number of the form 0x123ABC");
+            throw new IllegalArgumentException("Path color must be a hex number of the form 0x123ABC or #123abc");
         StdMap.pathColor = s;
     }
 
     public static void setPointColor(String s) {
+        if (s.charAt(0) == '#') s = "0x" + s.substring(1);
         if (!Pattern.matches("^0(x|X)([0-9a-fA-F]){6}$", s))
-            throw new IllegalArgumentException("Point color must be a hex number of the form 0x123ABC");
+            throw new IllegalArgumentException("Point color must be a hex number of the form 0x123ABC or #123abc");
         StdMap.pointColor = s;
     }
 

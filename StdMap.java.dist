@@ -507,15 +507,6 @@ public final class StdMap {
         StdMap.apiKeysSet = true;
     }
 
-    // set map center
-    private static void setMapCenter(Location l) {
-        StdMap.center = l;
-    }
-
-    public static void setMapCenter(double lng, double lat) {
-        setMapCenter(std.new Location(lng, lat));
-    }
-
     // set map dimensions (on screen)
     // calling with nonpositive arguments will just leave the default options
     public static void setMapScreenSize(int width, int height) {
@@ -524,14 +515,16 @@ public final class StdMap {
     }
 
     public static void setPathColor(String s) {
+        if (s.charAt(0) == '#') s = "0x" + s.substring(1);
         if (!Pattern.matches("^0(x|X)([0-9a-fA-F]){6}$", s))
-            throw new IllegalArgumentException("Path color must be a hex number of the form 0x123ABC");
+            throw new IllegalArgumentException("Path color must be a hex number of the form 0x123ABC or #123abc");
         StdMap.pathColor = s;
     }
 
     public static void setPointColor(String s) {
+        if (s.charAt(0) == '#') s = "0x" + s.substring(1);
         if (!Pattern.matches("^0(x|X)([0-9a-fA-F]){6}$", s))
-            throw new IllegalArgumentException("Point color must be a hex number of the form 0x123ABC");
+            throw new IllegalArgumentException("Point color must be a hex number of the form 0x123ABC or #123abc");
         StdMap.pointColor = s;
     }
 
@@ -596,11 +589,6 @@ public final class StdMap {
         StdMap.setVisiblePaths(ps);
     }
 
-    // unset map center
-    public static void unsetMapCenter() {
-        setMapCenter(null);
-    }
-
     // check if API keys are correct
     public static boolean validateApiKeys(String staticMapKey, String directionsKey) {
         if (staticMapKey == null || staticMapKey.length() == 0) {
@@ -633,49 +621,21 @@ public final class StdMap {
     // testing
     public static void main(String[] args) {
         StdMap.setApiKeys(Constants.STATIC_MAPS_API_KEY, Constants.DIRECTIONS_API_KEY);
-        // // Princeton test
-        // StdMap.clear();
-        // StdMap.addPoint(40.35025, -74.65219); // CS Dept
-        // StdMap.addPoint(40.34187, -74.65904); // Wawa
-        // StdMap.addPoint(40.34720, -74.66155); // Ustore
-        // StdMap.addVisiblePath(40.35025, -74.65219, 40.34187, -74.65904); // CS - W
-        // StdMap.addVisiblePath(40.34187, -74.65904, 40.34720, -74.66155); // W U
 
-        // // NYC test
-        // StdMap.clear();
-        // StdMap.addPoint(40.758896, -73.985130);
-        // StdMap.addPoint(40.750580, -73.993584);
-        // StdMap.addPoint(40.752655, -73.977295);
-        // StdMap.addPoint(40.785091, -73.968285);
-        // StdMap.addPoint(40.778965, -73.962311);
-        // StdMap.addPoint(40.76155, -73.97711);
-        // StdMap.addVisiblePath(40.758896, -73.985130, 40.750580, -73.993584);
-        // StdMap.addVisiblePath(40.752655, -73.977295, 40.785091, -73.968285);
-        // StdMap.addVisiblePath(40.778965, -73.962311, 40.785091, -73.968285);
-
-        // equals test 1
-        Location l1 = std.new Location(40.758896, -73.985130);
-        Location l2 = std.new Location(40.758896, -73.985130);
-        StdOut.println("Are equal? " + (l1.equals(l2)? "yes" : "no"));
-
-        // equals test 2
+        // NYC test
         StdMap.clear();
-        StdMap.setMapCenter(40.35025, -74.65219); // CS Dept
         StdMap.addPoint(40.758896, -73.985130);
         StdMap.addPoint(40.750580, -73.993584);
-        StdMap.addPoint(40.758896, -73.985130);
-        StdMap.addPoint(40.758896, -73.985130);
-        StdMap.addPoint(40.758896, -73.985130);
-        StdMap.addPoint(40.758896, -73.985130);
-        StdMap.addPoint(40.750580, -73.993584);
-        StdMap.addPoint(40.750580, -73.993584);
-        StdMap.addPoint(40.750580, -73.993584);
+        StdMap.addPoint(40.752655, -73.977295);
+        StdMap.addPoint(40.785091, -73.968285);
+        StdMap.addPoint(40.778965, -73.962311);
+        StdMap.addPoint(40.76155, -73.97711);
         StdMap.addVisiblePath(40.758896, -73.985130, 40.750580, -73.993584);
-        StdMap.addVisiblePath(40.758896, -73.985130, 40.750580, -73.993584);
-        StdMap.addVisiblePath(40.758896, -73.985130, 40.750580, -73.993584);
-        StdMap.setShowPoints(false);
-        StdOut.println("Graph size " + graph.size());
-        StdOut.println("Path size " + visiblePaths.size());
+        StdMap.addVisiblePath(40.752655, -73.977295, 40.785091, -73.968285);
+        StdMap.addVisiblePath(40.778965, -73.962311, 40.785091, -73.968285);
+
+        StdMap.setPathColor("#4287f5");
+        StdMap.setPointColor("#42f59c");
 
         openMap();
     }
