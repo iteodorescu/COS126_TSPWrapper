@@ -7,7 +7,7 @@ import org.json.*;
 
 public final class StdMap {
     // helper classes
-    private final class Location extends Object {
+    private final class Location {
         public final double lng;
         public final double lat;
 
@@ -25,11 +25,14 @@ public final class StdMap {
             lat = process(la);
         }
 
-        @Override
         public boolean equals(Object that) {
             if (that instanceof Location)
                 return ((Location)that).lng == lng && ((Location)that).lat == lat;
             return false;
+        }
+
+        public int hashCode() {
+            return (int)Math.round(((lng - MIN_LNG) * (MAX_LAT-MIN_LAT) + lat-MIN_LAT)* 100000);
         }
 
         // ensure accuracy of max 5 decimals
@@ -43,7 +46,7 @@ public final class StdMap {
     }
 
 
-    private final class Path extends Object {
+    private final class Path{
         // identifiers
         public final Location start;
         public final Location end;
@@ -120,13 +123,19 @@ public final class StdMap {
             this(std.new Location(startLng, startLat), std.new Location(endLng, endLat));
         }
 
-        @Override
         public boolean equals(Object that) {
             if (that instanceof Path)
                 return (((Path)that).start.equals(start) && ((Path)that).end.equals(end)) ||
                         (((Path)that).start.equals(end) && ((Path)that).end.equals(start));
             return false;
         }
+
+        public int hashCode() {
+            double hs = this.start.hashCode()/100000d;
+            double he = this.end.hashCode()/100000d;
+            return (int)Math.round(hs*he);
+        }
+        
 
         // gets the length of the available path in meters or or -1 if the path is not possible
         public double getDistance() {
@@ -275,7 +284,10 @@ public final class StdMap {
     // add records *possible* paths between points
     private static void addPoint(Location l) {
         if (StdMap.graph == null) StdMap.graph = new Hashtable<Location, Hashtable<Location, Path>>();
-        if (StdMap.graph.containsKey(l)) return;
+        if (StdMap.graph.containsKey(l)) {
+            StdOut.println("here");
+            return;
+        }
         Hashtable<Location, Path> s = new Hashtable<Location, Path>();
         for (Location it : StdMap.graph.keySet()) {
             Path p = std.new Path(l, it);
@@ -308,7 +320,7 @@ public final class StdMap {
     private static void addVisiblePath(Path p) {
         if (!p.isPossible())
             throw new IllegalArgumentException("Impossible path can't be drawn to map");
-        if (StdMap.graph.containsKey(p.start) && StdMap.graph.containsKey(p.end))
+        if (!StdMap.graph.containsKey(p.start) && !StdMap.graph.containsKey(p.end))
             throw new IllegalArgumentException("Path contains endpoints that are not on the map");
 
         if (StdMap.visiblePaths == null) StdMap.visiblePaths = new HashSet<Path>();
@@ -398,7 +410,8 @@ public final class StdMap {
             getBoundariesInsertHelper(boundaries, isSet, new double[]{l.lng, l.lng, l.lat, l.lat});
         }
         assert(isSet[0] && isSet[1] && isSet[2] && isSet[3]);
-
+        if (StdMap.center != null) getBoundariesInsertHelper(boundaries, isSet, 
+                                    new double[]{center.lng, center.lng, center.lat, center.lat});
         return boundaries;
     }
 
@@ -587,6 +600,11 @@ public final class StdMap {
         StdMap.setVisiblePaths(ps);
     }
 
+    // unset map center
+    public static void unsetMapCenter() {
+        setMapCenter(null);
+    }
+
     // check if API keys are correct
     public static boolean validateApiKeys(String staticMapKey, String directionsKey) {
         if (staticMapKey == null || staticMapKey.length() == 0) {
@@ -619,27 +637,47 @@ public final class StdMap {
     // testing
     public static void main(String[] args) {
         StdMap.setApiKeys(Constants.STATIC_MAPS_API_KEY, Constants.DIRECTIONS_API_KEY);
-        // Princeton test
-        StdMap.clear();
-        StdMap.addPoint(40.35025, -74.65219); // CS Dept
-        StdMap.addPoint(40.34187, -74.65904); // Wawa
-        StdMap.addPoint(40.34720, -74.66155); // Ustore
-        StdMap.addVisiblePath(40.35025, -74.65219, 40.34187, -74.65904); // CS - W
-        StdMap.addVisiblePath(40.34187, -74.65904, 40.34720, -74.66155); // W U
+        // // Princeton test
+        // StdMap.clear();
+        // StdMap.addPoint(40.35025, -74.65219); // CS Dept
+        // StdMap.addPoint(40.34187, -74.65904); // Wawa
+        // StdMap.addPoint(40.34720, -74.66155); // Ustore
+        // StdMap.addVisiblePath(40.35025, -74.65219, 40.34187, -74.65904); // CS - W
+        // StdMap.addVisiblePath(40.34187, -74.65904, 40.34720, -74.66155); // W U
 
-        // NYC test
+        // // NYC test
+        // StdMap.clear();
+        // StdMap.addPoint(40.758896, -73.985130);
+        // StdMap.addPoint(40.750580, -73.993584);
+        // StdMap.addPoint(40.752655, -73.977295);
+        // StdMap.addPoint(40.785091, -73.968285);
+        // StdMap.addPoint(40.778965, -73.962311);
+        // StdMap.addPoint(40.76155, -73.97711);
+        // StdMap.addVisiblePath(40.758896, -73.985130, 40.750580, -73.993584);
+        // StdMap.addVisiblePath(40.752655, -73.977295, 40.785091, -73.968285);
+        // StdMap.addVisiblePath(40.778965, -73.962311, 40.785091, -73.968285);
+
+        // equals test 1
+        Location l1 = std.new Location(40.758896, -73.985130);
+        Location l2 = std.new Location(40.758896, -73.985130);
+        StdOut.println("Are equal? " + (l1.equals(l2)? "yes" : "no"));
+
+        // equals test 2
         StdMap.clear();
         StdMap.addPoint(40.758896, -73.985130);
         StdMap.addPoint(40.750580, -73.993584);
-        StdMap.addPoint(40.752655, -73.977295);
-        StdMap.addPoint(40.785091, -73.968285);
-        StdMap.addPoint(40.778965, -73.962311);
-        StdMap.addPoint(40.76155, -73.97711);
+        StdMap.addPoint(40.758896, -73.985130);
+        StdMap.addPoint(40.758896, -73.985130);
+        StdMap.addPoint(40.758896, -73.985130);
+        StdMap.addPoint(40.758896, -73.985130);
+        StdMap.addPoint(40.750580, -73.993584);
+        StdMap.addPoint(40.750580, -73.993584);
+        StdMap.addPoint(40.750580, -73.993584);
         StdMap.addVisiblePath(40.758896, -73.985130, 40.750580, -73.993584);
-        StdMap.addVisiblePath(40.752655, -73.977295, 40.785091, -73.968285);
-        StdMap.addVisiblePath(40.778965, -73.962311, 40.785091, -73.968285);
-
-        // something else....
+        StdMap.addVisiblePath(40.758896, -73.985130, 40.750580, -73.993584);
+        StdMap.addVisiblePath(40.758896, -73.985130, 40.750580, -73.993584);
+        StdOut.println("Graph size " + graph.size());
+        StdOut.println("Path size " + visiblePaths.size());
 
         openMap();
     }

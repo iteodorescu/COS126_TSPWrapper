@@ -1,5 +1,6 @@
 
 I created this wrapper for the Princeton University's COS 126 [Travelling Salesperson Problem assignment](https://www.cs.princeton.edu/courses/archive/fall19/cos126/assignments/tsp/).
+# Setup
 Follow these steps to setup:
 
 ## Get Google Maps API keys
@@ -15,7 +16,7 @@ For this project you will want to get keys for:
 >Important: This key should be kept secret on your server.
 
 ## Create Constants file: 
-Use your created Google Maps API keys, and create a Constants.java file with the following code:.
+Use your created Google Maps API keys, and create a Constants.java file with the following code:
 ```
 public class Constants {
     public static final String DIRECTIONS_API_KEY = [YOUR GOOGLE MAPS DIRECTIONS API KEY HERE];
@@ -36,3 +37,7 @@ $ jar xf json-20190722.jar
 *You should substitute *json-20190722.jar* with whatever you chose to name your saved file. You could also use Maven to in
 stall this, if that's easier and available to you.
 
+# Testing
+Run *TSPMap.java* with the tests provided such as *Princeton_locations.txt* and *NYC_locations.txt*.
+
+## Making your own test files
