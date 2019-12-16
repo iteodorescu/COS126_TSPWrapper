@@ -15,6 +15,10 @@ public class TSPMap {
         StdMap.setMapScreenSize(width, height);
 
         Tour tour = new Tour(true);
+        if (StdIn.isEmpty()) {
+            StdOut.println("Empty");
+            return;
+        }
         while (!StdIn.isEmpty()) {
             double x = StdIn.readDouble();
             double y = StdIn.readDouble();
@@ -49,7 +53,6 @@ public class TSPMap {
             }
             double lng = Double.parseDouble(coords[0].trim());
             double lat = Double.parseDouble(coords[1].trim());
-
             StdMap.addPoint(lng, lat);
             
             if (i == 0) {

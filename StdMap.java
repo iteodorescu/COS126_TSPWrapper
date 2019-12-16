@@ -12,15 +12,17 @@ public final class StdMap {
         public final double lat;
 
         // other constants
-        private static final double MIN_LNG = -180.0;
-        private static final double MAX_LNG = 180.0;
-        private static final double MIN_LAT = -85.05115;
-        private static final double MAX_LAT = 85;
+        private static final double MIN_LAT = -180.0;
+        private static final double MAX_LAT = 180.0;
+        private static final double MIN_LNG = -85.05115;
+        private static final double MAX_LNG = 85;
 
         // constructors
         public Location(double ln, double la) {
-            if (la < MIN_LAT || ln < MIN_LNG || MAX_LAT < la || MAX_LNG < ln)
+            if (la < MIN_LAT || ln < MIN_LNG || la > MAX_LAT || ln > MAX_LNG) {
+                
                 throw new IllegalArgumentException("Coordinates exceed world bounds");
+            }
             lng = process(ln);
             lat = process(la);
         }
@@ -64,7 +66,6 @@ public final class StdMap {
             if (!StdMap.apiKeysSet) throw new IllegalStateException("API calls can't be made until all API keys are set");
             this.start = start;
             this.end = end;
-
             // start request
             String req = Request.request(getReqURL());
             JSONObject res = new JSONObject(req);
@@ -91,8 +92,9 @@ public final class StdMap {
                     // get bounds
                     JSONObject ne = bounds.getJSONObject("northeast");
                     JSONObject sw = bounds.getJSONObject("southwest");
-                    this.boundaryNE = std.new Location(ne.getDouble("lng"), ne.getDouble("lat"));
-                    this.boundarySW = std.new Location(sw.getDouble("lng"), sw.getDouble("lat"));
+                    this.boundaryNE = std.new Location(ne.getDouble("lat"), ne.getDouble("lng"));
+                    this.boundarySW = std.new Location(sw.getDouble("lat"), sw.getDouble("lng"));
+                    
                     return;
                 }
                 case "MAX_WAYPOINTS_EXCEEDED":
@@ -251,6 +253,7 @@ public final class StdMap {
     private static String pointColor;
     private static Location center;
     private static boolean showPoints;
+    private static int zoom;
 
     // touched only by me
     private static boolean apiKeysSet;
@@ -275,6 +278,7 @@ public final class StdMap {
         StdMap.pathColor = StdMap.DEFAULT_PATH_COLOR;
         StdMap.pointColor = StdMap.DEFAULT_POINT_COLOR;
         StdMap.center = null;
+        StdMap.zoom = -1;
         StdMap.showPoints = true;
         StdMap.apiKeysSet = false;
     }
@@ -351,20 +355,27 @@ public final class StdMap {
 
         // add points
         if (StdMap.showPoints) {
+            boolean isFirst = true;
             for (Location l : StdMap.graph.keySet()) {
-                boolean flag = addToUrl(url, "&markers=size:tiny%7Ccolor:"+ StdMap.pointColor + "%7C" + l.toString());
+                
+                String opts = "&markers=size:" + (isFirst? "mid" : "tiny") + "%7Ccolor:"+ StdMap.pointColor + "%7C";
+                boolean flag = addToUrl(url, opts + l.toString());
                 if (!flag) break;
+
+                if (isFirst) isFirst = false;
             }
         }
 
         if (StdMap.visiblePaths != null) {
             for (Path p : StdMap.visiblePaths) {
                 assert(p.getPathId() != null);
-                addToUrl(url, "&path=weight:3%7Ccolor:" + StdMap.pathColor + "ff%7Cenc:" + p.getPathId());
+                // in the url below the 80 after the color is the alpha value (transparency)
+                addToUrl(url, "&path=weight:3%7Ccolor:" + StdMap.pathColor + "80%7Cenc:" + p.getPathId());
             }
         }
 
         url.append("&maptype=roadmap");
+        if (StdMap.zoom > 0) url.append("&zoom=" + StdMap.zoom);
         url.append("&key=");
         url.append(StdMap.STATIC_MAP_API_KEY);
 
@@ -372,7 +383,7 @@ public final class StdMap {
     }
 
     private static double getMapDistance(Location a, Location b) {
-        if (graph.containsKey(a) && graph.containsKey(b)) {
+        if (graph.containsKey(a) && graph.get(a).containsKey(b)) {
             return graph.get(a).get(b).getDistance();
         }
         Path p = std.new Path(a, b);
@@ -461,6 +472,7 @@ public final class StdMap {
         StdDraw.enableDoubleBuffering();
         StdDraw.picture(StdMap.canvasWidth/2d, StdMap.canvasHeight/2d, url, StdMap.canvasWidth, StdMap.canvasHeight);
         StdDraw.show();
+        //System.exit(0);
     }
 
     // remove location from map
@@ -507,6 +519,7 @@ public final class StdMap {
         StdMap.apiKeysSet = true;
     }
 
+    /*
     // set map center
     private static void setMapCenter(Location l) {
         StdMap.center = l;
@@ -514,6 +527,11 @@ public final class StdMap {
 
     public static void setMapCenter(double lng, double lat) {
         setMapCenter(std.new Location(lng, lat));
+    }*/
+
+    public static void setZoom(int zoom) {
+        if (zoom <= 0) throw new IllegalArgumentException("Zoom must be a positive value.");
+        StdMap.zoom = zoom;
     }
 
     // set map dimensions (on screen)
@@ -598,9 +616,15 @@ public final class StdMap {
         StdMap.setVisiblePaths(ps);
     }
 
+    /*
     // unset map center
     public static void unsetMapCenter() {
         setMapCenter(null);
+    }
+    */
+
+    public static void unsetZoom() {
+        StdMap.zoom = -1;
     }
 
     // check if API keys are correct
@@ -662,8 +686,9 @@ public final class StdMap {
 
         // equals test 2
         StdMap.clear();
-        StdMap.setMapCenter(40.35025, -74.65219); // CS Dept
-        StdMap.addPoint(40.758896, -73.985130);
+        // StdMap.setMapCenter(40.35025, -74.65219); // CS Dept
+        StdMap.setZoom(1);
+        StdMap.unsetZoom();
         StdMap.addPoint(40.750580, -73.993584);
         StdMap.addPoint(40.758896, -73.985130);
         StdMap.addPoint(40.758896, -73.985130);

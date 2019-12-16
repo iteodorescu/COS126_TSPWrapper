@@ -251,6 +251,7 @@ public final class StdMap {
     private static String pointColor;
     private static Location center;
     private static boolean showPoints;
+    private static int zoom;
 
     // touched only by me
     private static boolean apiKeysSet;
@@ -275,6 +276,7 @@ public final class StdMap {
         StdMap.pathColor = StdMap.DEFAULT_PATH_COLOR;
         StdMap.pointColor = StdMap.DEFAULT_POINT_COLOR;
         StdMap.center = null;
+        StdMap.zoom = -1;
         StdMap.showPoints = true;
         StdMap.apiKeysSet = false;
     }
@@ -360,11 +362,13 @@ public final class StdMap {
         if (StdMap.visiblePaths != null) {
             for (Path p : StdMap.visiblePaths) {
                 assert(p.getPathId() != null);
-                addToUrl(url, "&path=weight:3%7Ccolor:" + StdMap.pathColor + "ff%7Cenc:" + p.getPathId());
+                // in the url belowe the 80 after the color is the alpha value (transparency)
+                addToUrl(url, "&path=weight:3%7Ccolor:" + StdMap.pathColor + "80%7Cenc:" + p.getPathId());
             }
         }
 
         url.append("&maptype=roadmap");
+        if (StdMap.zoom > 0) url.append("&zoom=" + StdMap.zoom);
         url.append("&key=");
         url.append(StdMap.STATIC_MAP_API_KEY);
 
@@ -372,7 +376,7 @@ public final class StdMap {
     }
 
     private static double getMapDistance(Location a, Location b) {
-        if (graph.containsKey(a) && graph.containsKey(b)) {
+        if (graph.containsKey(a) && graph.get(a).containsKey(b)) {
             return graph.get(a).get(b).getDistance();
         }
         Path p = std.new Path(a, b);
@@ -381,67 +385,6 @@ public final class StdMap {
 
     public static double getMapDistance(double startLng, double startLat, double endLng, double endLat) {
         return StdMap.getMapDistance(std.new Location(startLng, startLat), std.new Location(endLng, endLat));
-    }
-
-    
-    // this was useless :(
-    // returns W, E, S, N boundaries in this order
-    private static double[] getBoundaries() {
-        assert(StdMap.graph != null);
-        double[] boundaries = new double[4];
-        boolean[] isSet = new boolean[4]; // default is false for all values
-
-        if (StdMap.visiblePaths == null) {
-            System.err.println("Paths not set");
-        }
-        else {
-            for (Path p : StdMap.visiblePaths) {
-                assert (p.isPossible());
-                getBoundariesInsertHelper(boundaries, isSet, p.getBoundaries());
-            }
-        }
-
-        // if it's a hamiltonian path this shouldn't be needed
-        for (Location l : StdMap.graph.keySet()) {
-            getBoundariesInsertHelper(boundaries, isSet, new double[]{l.lng, l.lng, l.lat, l.lat});
-        }
-        assert(isSet[0] && isSet[1] && isSet[2] && isSet[3]);
-        if (StdMap.center != null) getBoundariesInsertHelper(boundaries, isSet, 
-                                    new double[]{center.lng, center.lng, center.lat, center.lat});
-        return boundaries;
-    }
-
-    // helper to compare current boundaries (boundaries[i] set iff isSet[i])
-    // against a new rectangle of boundaries (temp) to be inserted
-    private static void getBoundariesInsertHelper(double[] boundaries, boolean[] isSet, double[] temp) {
-        // West (lowest on lng/x axis)
-        if (!isSet[0] || boundaries[0] > temp[0]) {
-            boundaries[0] = temp[0];
-            isSet[0] = true;
-        }
-        // East (highest on lng/x axis)
-        if (!isSet[1] || boundaries[1] < temp[1]) {
-            boundaries[1] = temp[1];
-            isSet[1] = true;
-        }
-        // South (lowest on lat/y axis)
-        if (!isSet[2] || boundaries[2] > temp[2]) {
-            boundaries[2] = temp[2];
-            isSet[2] = true;
-        }
-        // North (highest on lat/y axis)
-        if (!isSet[3] || boundaries[3] < temp[3]) {
-            boundaries[3] = temp[3];
-            isSet[3] = true;
-        }
-    }
-
-    // finds the point in the center of the map boundary (or returns the one provided by the user)
-    private static Location findCenter() {
-        assert(StdMap.graph != null);
-        if (StdMap.center != null) return StdMap.center; // was setup by user
-        double[] boundaries = getBoundaries();
-        return std.new Location((boundaries[0]+boundaries[1])/2.0, (boundaries[2]+boundaries[3])/2.0);
     }
 
     // opens map using StdDraw
@@ -505,6 +448,11 @@ public final class StdMap {
         StdMap.STATIC_MAP_API_KEY = staticMapKey;
         StdMap.DIRECTIONS_API_KEY = directionsKey;
         StdMap.apiKeysSet = true;
+    }
+
+    public static void setZoom(int zoom) {
+        if (zoom <= 0) throw new IllegalArgumentException("Zoom must be a positive value.");
+        StdMap.zoom = zoom;
     }
 
     // set map dimensions (on screen)
@@ -589,6 +537,10 @@ public final class StdMap {
         StdMap.setVisiblePaths(ps);
     }
 
+    public static void unsetZoom() {
+        StdMap.zoom = -1;
+    }
+
     // check if API keys are correct
     public static boolean validateApiKeys(String staticMapKey, String directionsKey) {
         if (staticMapKey == null || staticMapKey.length() == 0) {
@@ -620,24 +572,6 @@ public final class StdMap {
 
     // testing
     public static void main(String[] args) {
-        StdMap.setApiKeys(Constants.STATIC_MAPS_API_KEY, Constants.DIRECTIONS_API_KEY);
-
-        // NYC test
-        StdMap.clear();
-        StdMap.addPoint(40.758896, -73.985130);
-        StdMap.addPoint(40.750580, -73.993584);
-        StdMap.addPoint(40.752655, -73.977295);
-        StdMap.addPoint(40.785091, -73.968285);
-        StdMap.addPoint(40.778965, -73.962311);
-        StdMap.addPoint(40.76155, -73.97711);
-        StdMap.addVisiblePath(40.758896, -73.985130, 40.750580, -73.993584);
-        StdMap.addVisiblePath(40.752655, -73.977295, 40.785091, -73.968285);
-        StdMap.addVisiblePath(40.778965, -73.962311, 40.785091, -73.968285);
-
-        StdMap.setPathColor("#4287f5");
-        StdMap.setPointColor("#42f59c");
-
-        openMap();
     }
 }
 

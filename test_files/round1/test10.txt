@@ -1,0 +1,11 @@
+700 700
+40.758896 -73.985130 Times Square
+40.750580 -73.993584 Penn Station
+40.752655 -73.977295 Grand Central Terminal
+40.785091 -73.968285 Central Park
+40.778965 -73.962311 The Met
+40.665535 -73.969749 Prospect Park
+40.7480 -74.0048 The Highline
+40.7424 -74.0061 Chelsea Market
+40.76155 -73.97711 MoMA
+40.5755 -73.9707 Coney Island

@@ -1,0 +1,3 @@
+700 700
+40.758896 -73.985130 Times Square
+40.752655 -73.977295 Grand Central Terminal

@@ -1,0 +1,3 @@
+500 500
+40.758896 -73.985130 Times Square
+40.34960 -74.65740 Firestone Library

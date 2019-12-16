@@ -1,0 +1,82 @@
+Performance
+====================================
+FILE NAME:  ./test_files/performance/test0.txt
+nearest time
+
+real	0m0.797s
+user	0m1.113s
+sys	0m0.094s
+smallest time
+
+real	0m0.805s
+user	0m1.010s
+sys	0m0.086s
+*********
+
+FILE NAME:  ./test_files/performance/test1.txt
+nearest time
+
+real	0m3.326s
+user	0m2.692s
+sys	0m0.560s
+smallest time
+
+real	0m2.706s
+user	0m2.638s
+sys	0m0.336s
+*********
+
+FILE NAME:  ./test_files/performance/test10.txt
+nearest time
+
+real	0m8.514s
+user	0m4.022s
+sys	0m0.412s
+smallest time
+
+real	0m7.695s
+user	0m4.132s
+sys	0m0.461s
+*********
+
+FILE NAME:  ./test_files/performance/test2.txt
+nearest time
+
+real	0m3.265s
+user	0m2.947s
+sys	0m0.375s
+smallest time
+
+real	0m3.196s
+user	0m3.026s
+sys	0m0.385s
+*********
+
+Stress
+====================================
+FILE NAME:  ./test_files/stress/test1.txt
+nearest time
+
+real	0m4.381s
+user	0m3.105s
+sys	0m0.455s
+smallest time
+
+real	0m3.366s
+user	0m2.916s
+sys	0m0.393s
+*********
+
+FILE NAME:  ./test_files/stress/test2.txt
+nearest time
+
+real	0m3.201s
+user	0m2.991s
+sys	0m0.341s
+smallest time
+
+real	0m2.887s
+user	0m3.103s
+sys	0m0.337s
+*********
+
