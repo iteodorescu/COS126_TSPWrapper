@@ -56,6 +56,7 @@ public final class StdMap {
 
         // path stats
         private double distance; // in meters
+        private double time; //in sec
         private final boolean isPossible;
         private final Location boundaryNE;
         private final Location boundarySW;
@@ -84,9 +85,11 @@ public final class StdMap {
 
                     // get distance
                     this.distance = 0d;
+                    this.time = 0d;
                     for (int i = 0; i < legs.length(); i++) {
                         JSONObject leg = legs.getJSONObject(i);
                         this.distance += leg.getJSONObject("distance").getInt("value");
+                        this.time += leg.getJSONObject("duration").getInt("value");
                     }
 
                     // get bounds
@@ -157,7 +160,8 @@ public final class StdMap {
             assert(StdMap.DIRECTIONS_API_KEY != null);
             StringBuilder url = new StringBuilder(StdMap.DIRECTIONS_URL);
 
-            url.append("?mode=walking");
+            url.append("?mode=");
+            url.append(StdMap.mode);
 
             url.append("&origin=");
             url.append(start.toString());
@@ -168,6 +172,12 @@ public final class StdMap {
             url.append("&key=");
             url.append(StdMap.DIRECTIONS_API_KEY);
             return url.toString();
+        }
+
+        public double getTime() {
+            if (!this.isPossible) return -1;
+            assert(this.time >= 0);
+            return time;
         }
 
         // returns whether there is any path available or null if the path is not possible
@@ -236,6 +246,7 @@ public final class StdMap {
     private static final String DIRECTIONS_URL = "https://maps.googleapis.com/maps/api/directions/json";
     private static final int DEFAULT_MAP_WIDTH = 500;
     private static final int  DEFAULT_MAP_HEIGHT = 500;
+    private static final String DEFAULT_MODE = "walking";
     private static final String DEFAULT_PATH_COLOR = "0x000000";
     private static final String DEFAULT_POINT_COLOR = "0xFF0000";
     private static final int MAX_URL_CHARS = 8000; // it's actually 8192 but just in case, leaving space for the key
@@ -249,6 +260,7 @@ public final class StdMap {
     // things that could be set
     private static int canvasWidth;
     private static int canvasHeight;
+    private static String mode;
     private static String pathColor;
     private static String pointColor;
     private static Location center;
@@ -275,6 +287,7 @@ public final class StdMap {
         StdMap.DIRECTIONS_API_KEY = null;
         StdMap.canvasWidth = StdMap.DEFAULT_MAP_WIDTH;
         StdMap.canvasHeight = StdMap.DEFAULT_MAP_HEIGHT;
+        StdMap.mode = StdMap.DEFAULT_MODE;
         StdMap.pathColor = StdMap.DEFAULT_PATH_COLOR;
         StdMap.pointColor = StdMap.DEFAULT_POINT_COLOR;
         StdMap.center = null;
@@ -290,10 +303,10 @@ public final class StdMap {
         if (StdMap.graph.containsKey(l)) return;
         Hashtable<Location, Path> s = new Hashtable<Location, Path>();
         for (Location it : StdMap.graph.keySet()) {
-            Path p = std.new Path(l, it);
             Hashtable<Location, Path> sl = StdMap.graph.get(it);
-            s.put(it, p);
-            sl.put(l, p);
+            // paths might be different
+            s.put(it, std.new Path(l, it));
+            sl.put(l, std.new Path(it, l));
         }
         StdMap.graph.put(l, s);
     }
@@ -539,6 +552,17 @@ public final class StdMap {
     public static void setMapScreenSize(int width, int height) {
         StdMap.canvasWidth = width > 0? width : DEFAULT_MAP_WIDTH;
         StdMap.canvasHeight = height > 0? height : DEFAULT_MAP_HEIGHT;
+    }
+
+    public static void setTransportationMode(String mode) {
+        String m = mode.toLowerCase();
+        if (!(m.equals("driving") || m.equals("walking") || m.equals("transit") || m.equals("bicycling")))
+            throw new IllegalArgumentException("Transportation mode can be set to either" + 
+                                                "driving, walking, bicycling, or transit (where available)");
+        StdMap.mode = new String(mode);
+        Set<Location> points = graph.keySet();
+        StdMap.clear();
+        StdMap.setPoints(points.toArray(new Location[0]));
     }
 
     public static void setPathColor(String s) {

@@ -32,6 +32,8 @@ public class TSPMap {
         }
         String[] points = tour.toString().split("\n");
 
+        StdMap.setTransportationMode("transit");
+
         double firstLng = 0;
         double firstLat = 0;
         double prevLng = 0;
@@ -66,7 +68,6 @@ public class TSPMap {
             prevLat = lat;
         }
         StdMap.addVisiblePath(prevLng, prevLat, firstLng, firstLat);
-
         StdMap.openMap();
     }
 }
