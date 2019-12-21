@@ -32,7 +32,8 @@ public class TSPMap {
         }
         String[] points = tour.toString().split("\n");
 
-        StdMap.setTransportationMode("transit");
+        // StdMap.setTransportationMode("transit");
+        // StdMap.setTransportationMode("driving");
 
         double firstLng = 0;
         double firstLat = 0;

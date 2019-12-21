@@ -149,12 +149,6 @@ public final class StdMap {
             return distance;
         }
 
-        public double getDistanceInMiles() {
-            if (!this.isPossible) return -1;
-            assert(this.distance >= 0);
-            return Math.round(this.distance/1609.344*10)/10d;
-        }
-
         // get path request url
         private String getReqURL() {
             assert(StdMap.DIRECTIONS_API_KEY != null);
@@ -246,11 +240,12 @@ public final class StdMap {
     private static final String DIRECTIONS_URL = "https://maps.googleapis.com/maps/api/directions/json";
     private static final int DEFAULT_MAP_WIDTH = 500;
     private static final int  DEFAULT_MAP_HEIGHT = 500;
+    private static final int SIDEBAR_WIDTH = 200;
     private static final String DEFAULT_MODE = "walking";
     private static final String DEFAULT_PATH_COLOR = "0x000000";
     private static final String DEFAULT_POINT_COLOR = "0xFF0000";
     private static final int MAX_URL_CHARS = 8000; // it's actually 8192 but just in case, leaving space for the key
-
+    
     // needs to be setup
     private static Hashtable<Location, Hashtable<Location, Path>> graph;
     private static Set<Path> visiblePaths;
@@ -395,6 +390,20 @@ public final class StdMap {
         return url.toString();
     }
 
+    private static void drawInfobox() {
+        // get timing and distance info
+        int dist = 0; // in meters
+        int time = 0; // in secs
+        for (Path p : visiblePaths) {
+            dist += p.getDistance();
+            time += p.getTime();
+        }
+        // display info
+        StdOut.printf("The transportation mode is %s.\n", StdMap.mode);
+        StdOut.printf("Total distance of the tour: %.1f mi\n", metersToMiles(dist));
+        StdOut.printf("Total time of the tour: %.1f min\n", secsToMins(time));
+    }
+
     private static double getMapDistance(Location a, Location b) {
         if (graph.containsKey(a) && graph.get(a).containsKey(b)) {
             return graph.get(a).get(b).getDistance();
@@ -468,6 +477,10 @@ public final class StdMap {
         return std.new Location((boundaries[0]+boundaries[1])/2.0, (boundaries[2]+boundaries[3])/2.0);
     }
 
+    private static double metersToMiles(int distance) {
+        return Math.round(distance/1609.344*10)/10d;
+    }
+
     // opens map using StdDraw
     // takes in Google Maps Static Maps API key as argument
     public static void openMap() {
@@ -479,12 +492,14 @@ public final class StdMap {
 
         String url = createMapUrl();
         if (url == null) return;
-        StdDraw.setCanvasSize(StdMap.canvasWidth, StdMap.canvasHeight);
-        StdDraw.setXscale(0, StdMap.canvasWidth);
+        StdMap.drawInfobox();
+        StdDraw.setCanvasSize(StdMap.canvasWidth + StdMap.SIDEBAR_WIDTH, StdMap.canvasHeight);
+        StdDraw.setXscale(0, StdMap.canvasWidth + StdMap.SIDEBAR_WIDTH);
         StdDraw.setYscale(0, StdMap.canvasHeight);
         StdDraw.enableDoubleBuffering();
         StdDraw.picture(StdMap.canvasWidth/2d, StdMap.canvasHeight/2d, url, StdMap.canvasWidth, StdMap.canvasHeight);
         StdDraw.show();
+        // uncomment for timing
         //System.exit(0);
     }
 
@@ -522,6 +537,9 @@ public final class StdMap {
         StdMap.removeVisiblePath(std.new Path(startlng, startlat, endlng, endlat));
     }
 
+    private static double secsToMins(int sec) {
+        return Math.round(sec/60d * 10)/10d;
+    }
 
     // set API keys is correct
     public static void setApiKeys(String staticMapKey, String directionsKey) {
@@ -559,7 +577,7 @@ public final class StdMap {
         if (!(m.equals("driving") || m.equals("walking") || m.equals("transit") || m.equals("bicycling")))
             throw new IllegalArgumentException("Transportation mode can be set to either" + 
                                                 "driving, walking, bicycling, or transit (where available)");
-        StdMap.mode = new String(mode);
+        StdMap.mode = new String(m);
         Set<Location> points = graph.keySet();
         StdMap.clear();
         StdMap.setPoints(points.toArray(new Location[0]));
