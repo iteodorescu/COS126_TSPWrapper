@@ -240,7 +240,7 @@ public final class StdMap {
     private static final String DIRECTIONS_URL = "https://maps.googleapis.com/maps/api/directions/json";
     private static final int DEFAULT_MAP_WIDTH = 500;
     private static final int  DEFAULT_MAP_HEIGHT = 500;
-    private static final int SIDEBAR_WIDTH = 200;
+    private static final int SIDEBAR_WIDTH = 300;
     private static final String DEFAULT_MODE = "walking";
     private static final String DEFAULT_PATH_COLOR = "0x000000";
     private static final String DEFAULT_POINT_COLOR = "0xFF0000";
@@ -399,9 +399,18 @@ public final class StdMap {
             time += p.getTime();
         }
         // display info
-        StdOut.printf("The transportation mode is %s.\n", StdMap.mode);
-        StdOut.printf("Total distance of the tour: %.1f mi\n", metersToMiles(dist));
-        StdOut.printf("Total time of the tour: %.1f min\n", secsToMins(time));
+        String output1 = String.format("The transportation mode is %s.\n", StdMap.mode);
+        String output2 = String.format("Total distance of the tour: %.1f mi\n", metersToMiles(dist));
+        String output3 = String.format("Total time of the tour: %.1f min\n", secsToMins(time));
+        StdDraw.setFont();
+        StdDraw.setPenColor(StdDraw.BLACK);
+        StdDraw.setPenRadius();
+        StdDraw.textLeft(StdMap.canvasWidth + 5, StdMap.canvasHeight/2 + 20, output1);
+        StdDraw.textLeft(StdMap.canvasWidth + 5, StdMap.canvasHeight/2, output2);
+        StdDraw.textLeft(StdMap.canvasWidth + 5, StdMap.canvasHeight/2 - 20, output3);
+        // StdOut.printf("The transportation mode is %s.\n", StdMap.mode);
+        // StdOut.printf("Total distance of the tour: %.1f mi\n", metersToMiles(dist));
+        // StdOut.printf("Total time of the tour: %.1f min\n", secsToMins(time));
     }
 
     private static double getMapDistance(Location a, Location b) {
@@ -492,11 +501,11 @@ public final class StdMap {
 
         String url = createMapUrl();
         if (url == null) return;
-        StdMap.drawInfobox();
         StdDraw.setCanvasSize(StdMap.canvasWidth + StdMap.SIDEBAR_WIDTH, StdMap.canvasHeight);
         StdDraw.setXscale(0, StdMap.canvasWidth + StdMap.SIDEBAR_WIDTH);
         StdDraw.setYscale(0, StdMap.canvasHeight);
-        StdDraw.enableDoubleBuffering();
+        StdMap.drawInfobox();
+        // StdDraw.enableDoubleBuffering();
         StdDraw.picture(StdMap.canvasWidth/2d, StdMap.canvasHeight/2d, url, StdMap.canvasWidth, StdMap.canvasHeight);
         StdDraw.show();
         // uncomment for timing
