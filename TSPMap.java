@@ -1,15 +1,16 @@
 public class TSPMap {
     public static void main(String[] args) {
-        if ((args.length != 1) || !(args[0].equals("s") || args[0].equals("n"))) {
-            StdOut.println("This program should be called: \n$ java-introcs TSPMap n/s");
-            // StdOut.println("This program should be called: \n$ java-introcs TSPMap n/s [transportation_mode]");
+        if ((args.length != 1 && args.length != 2) || !(args[0].equals("s") || args[0].equals("n"))) {
+            StdOut.println("This program should be called: \n$ java-introcs TSPMap n/s [transportation_mode]");
             return;
         }
 
-        // if (args.length == 2) {
-        //     if (StdMap.isTransportationModeSupported(args[1]))
-        //         StdOut.println("This transportation mode is not supported. Supported transportation modes" + )
-        // }
+        if (args.length == 2) {
+            if (!StdMap.isTransportationModeSupported(args[1])) {
+                StdOut.println("This transportation mode is not supported. Supported transportation modes: " + StdMap.supportedTransportationModes());
+                return;
+            }   
+        }
 
         boolean isSmallestHeuristic = args[0].equals("s");
 
@@ -19,6 +20,8 @@ public class TSPMap {
         int width = StdIn.readInt();
         int height = StdIn.readInt();
         StdMap.setMapScreenSize(width, height);
+
+        if (args.length == 2) StdMap.setTransportationMode(args[1]);
 
         Tour tour = new Tour(true);
         if (StdIn.isEmpty()) {

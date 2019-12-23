@@ -16,7 +16,7 @@ public final class StdMap {
         private static final double MAX_LAT = 180.0;
         private static final double MIN_LNG = -85.05115;
         private static final double MAX_LNG = 85;
-
+        
         // constructors
         public Location(double ln, double la) {
             if (la < MIN_LAT || ln < MIN_LNG || la > MAX_LAT || ln > MAX_LNG) {
@@ -245,7 +245,8 @@ public final class StdMap {
     private static final String DEFAULT_PATH_COLOR = "0x000000";
     private static final String DEFAULT_POINT_COLOR = "0xFF0000";
     private static final int MAX_URL_CHARS = 8000; // it's actually 8192 but just in case, leaving space for the key
-    
+    private static final String[] TRANSPORTATION_MODE = new String[]{"driving", "walking", "bicycling", "transit"};
+
     // needs to be setup
     private static Hashtable<Location, Hashtable<Location, Path>> graph;
     private static Set<Path> visiblePaths;
@@ -415,9 +416,7 @@ public final class StdMap {
         StdDraw.textLeft(StdMap.canvasWidth + 5, StdMap.canvasHeight/2 + 20, output1);
         StdDraw.textLeft(StdMap.canvasWidth + 5, StdMap.canvasHeight/2, output2);
         StdDraw.textLeft(StdMap.canvasWidth + 5, StdMap.canvasHeight/2 - 20, output3);
-        // StdOut.printf("The transportation mode is %s.\n", StdMap.mode);
-        // StdOut.printf("Total distance of the tour: %.1f mi\n", metersToMiles(dist));
-        // StdOut.printf("Total time of the tour: %.1f min\n", secsToMins(time));
+        
     }
 
     public static void enableDefaultZoom() {
@@ -495,6 +494,14 @@ public final class StdMap {
         if (StdMap.center != null) return StdMap.center; // was setup by user
         double[] boundaries = getBoundaries();
         return std.new Location((boundaries[0]+boundaries[1])/2.0, (boundaries[2]+boundaries[3])/2.0);
+    }
+
+    public static boolean isTransportationModeSupported(String mode) {
+        String m = mode.toLowerCase();
+        for (int i = 0; i < StdMap.TRANSPORTATION_MODE.length; i++)  {
+            if (m.equals(StdMap.TRANSPORTATION_MODE[i])) return true;
+        }
+        return false;
     }
 
     private static double metersToMiles(int distance) {
@@ -596,11 +603,11 @@ public final class StdMap {
     }
 
     public static void setTransportationMode(String mode) {
-        String m = mode.toLowerCase();
-        if (!(m.equals("driving") || m.equals("walking") || m.equals("transit") || m.equals("bicycling")))
-            throw new IllegalArgumentException("Transportation mode can be set to either" + 
-                                                "driving, walking, bicycling, or transit (where available)");
-        StdMap.mode = new String(m);
+        if (!StdMap.isTransportationModeSupported(mode))
+            throw new IllegalArgumentException("Transportation mode can be set to either" + StdMap.supportedTransportationModes()
+                                                + " (where available)");
+        StdMap.mode = new String(mode);
+        if (graph == null) return;
         Set<Location> points = graph.keySet();
         StdMap.clear();
         StdMap.setPoints(points.toArray(new Location[0]));
@@ -679,6 +686,17 @@ public final class StdMap {
             ps[i] = std.new Path(points[i][0], points[i][1], points[i][2], points[i][3]);
         }
         StdMap.setVisiblePaths(ps);
+    }
+
+    public static String supportedTransportationModes() {
+        StringBuilder ls = new StringBuilder();
+        boolean isFirst = true;
+        for (int i = 0; i < StdMap.TRANSPORTATION_MODE.length; i++)  {
+            if (isFirst) isFirst = false;
+            else ls.append(", ");
+            ls.append(StdMap.TRANSPORTATION_MODE[i]);
+        }
+        return ls.toString();
     }
 
     // unset map center
