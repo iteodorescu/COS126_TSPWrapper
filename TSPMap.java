@@ -1,9 +1,15 @@
 public class TSPMap {
     public static void main(String[] args) {
-        if (args.length != 1 || !(args[0].equals("s") || args[0].equals("n"))) {
+        if ((args.length != 1) || !(args[0].equals("s") || args[0].equals("n"))) {
             StdOut.println("This program should be called: \n$ java-introcs TSPMap n/s");
+            // StdOut.println("This program should be called: \n$ java-introcs TSPMap n/s [transportation_mode]");
             return;
         }
+
+        // if (args.length == 2) {
+        //     if (StdMap.isTransportationModeSupported(args[1]))
+        //         StdOut.println("This transportation mode is not supported. Supported transportation modes" + )
+        // }
 
         boolean isSmallestHeuristic = args[0].equals("s");
 
@@ -70,5 +76,29 @@ public class TSPMap {
         }
         StdMap.addVisiblePath(prevLng, prevLat, firstLng, firstLat);
         StdMap.openMap();
+
+        while(true) {
+            if (StdDraw.hasNextKeyTyped()) {
+                char key = StdDraw.nextKeyTyped();
+                
+                if (key == 'i') {
+                    StdMap.zoomIn();
+                    StdMap.openMap();
+                }
+                if (key == 'o') {
+                    StdMap.zoomOut();
+                    StdMap.openMap();
+                }
+                if (key == 'm') {
+                    StdMap.disableDefaultZoom();
+                    StdMap.openMap();
+                }
+                if (key == 'd') {
+                    StdMap.enableDefaultZoom();
+                    StdMap.openMap();
+                }
+            }
+        }
+        
     }
 }

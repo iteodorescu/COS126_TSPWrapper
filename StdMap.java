@@ -261,6 +261,7 @@ public final class StdMap {
     private static Location center;
     private static boolean showPoints;
     private static int zoom;
+    private static boolean defaultZoom;
 
     // touched only by me
     private static boolean apiKeysSet;
@@ -286,9 +287,10 @@ public final class StdMap {
         StdMap.pathColor = StdMap.DEFAULT_PATH_COLOR;
         StdMap.pointColor = StdMap.DEFAULT_POINT_COLOR;
         StdMap.center = null;
-        StdMap.zoom = -1;
+        StdMap.zoom = 5;
         StdMap.showPoints = true;
         StdMap.apiKeysSet = false;
+        StdMap.defaultZoom = true;
     }
 
     // adds point to the graph to be displayed
@@ -383,11 +385,16 @@ public final class StdMap {
         }
 
         url.append("&maptype=roadmap");
-        if (StdMap.zoom > 0) url.append("&zoom=" + StdMap.zoom);
+        if (!StdMap.defaultZoom) url.append("&zoom=" + StdMap.zoom);
         url.append("&key=");
         url.append(StdMap.STATIC_MAP_API_KEY);
 
+        // System.out.println(url);
         return url.toString();
+    }
+
+    public static void disableDefaultZoom() {
+        StdMap.defaultZoom = false;
     }
 
     private static void drawInfobox() {
@@ -411,6 +418,10 @@ public final class StdMap {
         // StdOut.printf("The transportation mode is %s.\n", StdMap.mode);
         // StdOut.printf("Total distance of the tour: %.1f mi\n", metersToMiles(dist));
         // StdOut.printf("Total time of the tour: %.1f min\n", secsToMins(time));
+    }
+
+    public static void enableDefaultZoom() {
+        StdMap.defaultZoom = true;
     }
 
     private static double getMapDistance(Location a, Location b) {
@@ -505,7 +516,7 @@ public final class StdMap {
         StdDraw.setXscale(0, StdMap.canvasWidth + StdMap.SIDEBAR_WIDTH);
         StdDraw.setYscale(0, StdMap.canvasHeight);
         StdMap.drawInfobox();
-        // StdDraw.enableDoubleBuffering();
+        StdDraw.enableDoubleBuffering();
         StdDraw.picture(StdMap.canvasWidth/2d, StdMap.canvasHeight/2d, url, StdMap.canvasWidth, StdMap.canvasHeight);
         StdDraw.show();
         // uncomment for timing
@@ -559,7 +570,7 @@ public final class StdMap {
         StdMap.apiKeysSet = true;
     }
 
-    /*
+    
     // set map center
     private static void setMapCenter(Location l) {
         StdMap.center = l;
@@ -567,10 +578,13 @@ public final class StdMap {
 
     public static void setMapCenter(double lng, double lat) {
         setMapCenter(std.new Location(lng, lat));
-    }*/
+    }
 
     public static void setZoom(int zoom) {
-        if (zoom <= 0) throw new IllegalArgumentException("Zoom must be a positive value.");
+        if (zoom < 0 || zoom > 20) throw new IllegalArgumentException("Zoom must be a value between 0 and 20.");
+        
+        StdMap.disableDefaultZoom();
+        
         StdMap.zoom = zoom;
     }
 
@@ -667,15 +681,9 @@ public final class StdMap {
         StdMap.setVisiblePaths(ps);
     }
 
-    /*
     // unset map center
     public static void unsetMapCenter() {
         setMapCenter(null);
-    }
-    */
-
-    public static void unsetZoom() {
-        StdMap.zoom = -1;
     }
 
     // check if API keys are correct
@@ -705,6 +713,16 @@ public final class StdMap {
             return false;
         }
         return true;
+    }
+
+    public static int zoomIn() {
+        if (StdMap.zoom < 20) StdMap.zoom++;
+        return StdMap.zoom;
+    }
+
+    public static int zoomOut() {
+        if (StdMap.zoom > 0) StdMap.zoom--;
+        return StdMap.zoom;
     }
 
     // testing
@@ -738,8 +756,6 @@ public final class StdMap {
         // equals test 2
         StdMap.clear();
         // StdMap.setMapCenter(40.35025, -74.65219); // CS Dept
-        StdMap.setZoom(1);
-        StdMap.unsetZoom();
         StdMap.addPoint(40.750580, -73.993584);
         StdMap.addPoint(40.758896, -73.985130);
         StdMap.addPoint(40.758896, -73.985130);
