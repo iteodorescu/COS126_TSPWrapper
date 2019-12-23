@@ -733,7 +733,7 @@ public final class StdMap {
         // equals test 1
         Location l1 = std.new Location(40.758896, -73.985130);
         Location l2 = std.new Location(40.758896, -73.985130);
-        StdOut.println("Are equal? " + (l1.equals(l2)? "yes" : "no"));
+        System.out.println("Are equal? " + (l1.equals(l2)? "yes" : "no"));
 
         // equals test 2
         StdMap.clear();
@@ -752,8 +752,8 @@ public final class StdMap {
         StdMap.addVisiblePath(40.758896, -73.985130, 40.750580, -73.993584);
         StdMap.addVisiblePath(40.758896, -73.985130, 40.750580, -73.993584);
         StdMap.setShowPoints(false);
-        StdOut.println("Graph size " + graph.size());
-        StdOut.println("Path size " + visiblePaths.size());
+        System.out.println("Graph size " + graph.size());
+        System.out.println("Path size " + visiblePaths.size());
 
         openMap();
     }
