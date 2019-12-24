@@ -78,6 +78,11 @@ public class TSPMap {
             prevLat = lat;
         }
         StdMap.addVisiblePath(prevLng, prevLat, firstLng, firstLat);
+        StdMap.addMessage("The transportation mode is " + StdMap.getTransportationMode());
+        StdMap.addMessage("Total distance of the tour: " + StdMap.getTotalDistance());
+        StdMap.addMessage("Total time of the tour: " + StdMap.getTotalTime());
+        StdMap.showInfobox(360);
+
         StdMap.openMap();
 
         while(true) {

@@ -240,7 +240,7 @@ public final class StdMap {
     private static final String DIRECTIONS_URL = "https://maps.googleapis.com/maps/api/directions/json";
     private static final int DEFAULT_MAP_WIDTH = 500;
     private static final int  DEFAULT_MAP_HEIGHT = 500;
-    private static final int SIDEBAR_WIDTH = 300;
+    private static final int DEFAULT_INFOBOX_WIDTH = 360;
     private static final String DEFAULT_MODE = "walking";
     private static final String DEFAULT_PATH_COLOR = "0x000000";
     private static final String DEFAULT_POINT_COLOR = "0xFF0000";
@@ -263,6 +263,10 @@ public final class StdMap {
     private static boolean showPoints;
     private static int zoom;
     private static boolean defaultZoom;
+    private static boolean infoboxOn;
+    private static int infoboxWidth;
+    private static LinkedList<String> messages;
+    private static int maxMessages;
 
     // touched only by me
     private static boolean apiKeysSet;
@@ -292,6 +296,17 @@ public final class StdMap {
         StdMap.showPoints = true;
         StdMap.apiKeysSet = false;
         StdMap.defaultZoom = true;
+        StdMap.infoboxOn = false;
+        StdMap.infoboxWidth = StdMap.DEFAULT_INFOBOX_WIDTH;
+        StdMap.messages = new LinkedList<String>();
+        StdMap.maxMessages = (StdMap.canvasHeight - 10) / 20;
+    }
+
+    public static String addMessage(String m) {
+        StdMap.messages.add(m);
+        String popped = null;
+        while (StdMap.messages.size() > StdMap.maxMessages) popped = StdMap.messages.pop();
+        return popped;
     }
 
     // adds point to the graph to be displayed
@@ -400,23 +415,15 @@ public final class StdMap {
 
     private static void drawInfobox() {
         // get timing and distance info
-        int dist = 0; // in meters
-        int time = 0; // in secs
-        for (Path p : visiblePaths) {
-            dist += p.getDistance();
-            time += p.getTime();
-        }
         // display info
-        String output1 = String.format("The transportation mode is %s.\n", StdMap.mode);
-        String output2 = String.format("Total distance of the tour: %.1f mi\n", metersToMiles(dist));
-        String output3 = String.format("Total time of the tour: %.1f min\n", secsToMins(time));
         StdDraw.setFont();
         StdDraw.setPenColor(StdDraw.BLACK);
         StdDraw.setPenRadius();
-        StdDraw.textLeft(StdMap.canvasWidth + 5, StdMap.canvasHeight/2 + 20, output1);
-        StdDraw.textLeft(StdMap.canvasWidth + 5, StdMap.canvasHeight/2, output2);
-        StdDraw.textLeft(StdMap.canvasWidth + 5, StdMap.canvasHeight/2 - 20, output3);
-        
+        int i = 0;
+        for (String m : StdMap.messages) {
+            StdDraw.textLeft(StdMap.canvasWidth + 5, StdMap.canvasHeight - 20 - 20*i, m);
+            i++;
+        }
     }
 
     public static void enableDefaultZoom() {
@@ -488,12 +495,56 @@ public final class StdMap {
         }
     }
 
+    public static String getTotalDistance() {
+        int dist = 0; // in meters
+        for (Path p : visiblePaths) {
+            dist += p.getDistance();
+        }
+        String output = String.format("%.1f miles", metersToMiles(dist));
+        return output;
+    }
+
+    public static String getTotalTime() {
+        int time = 0; // in secs
+        for (Path p : visiblePaths) {
+            time += p.getTime();
+        }
+
+        double mins = secsToMins(time);
+        int hours = (int)Math.floor(mins/60);
+        mins -= hours*60;
+
+        String output = "";
+
+        if (hours > 0) {
+            if (hours > 1) output += (hours + " hours");
+            else output += (hours + " hour");
+
+            if (mins > 0) output += " ";
+        }
+
+        if (mins > 0) {
+            if (mins == 1) output += "1 minute";
+            else output += String.format("%.1f minutes", mins);
+        }
+
+        return output;
+    }
+
+    public static String getTransportationMode() {
+        return StdMap.mode;
+    }
+
     // finds the point in the center of the map boundary (or returns the one provided by the user)
     private static Location findCenter() {
         assert(StdMap.graph != null);
         if (StdMap.center != null) return StdMap.center; // was setup by user
         double[] boundaries = getBoundaries();
         return std.new Location((boundaries[0]+boundaries[1])/2.0, (boundaries[2]+boundaries[3])/2.0);
+    }
+
+    public static void hideInfobox() {
+        StdMap.infoboxOn = false;
     }
 
     public static boolean isTransportationModeSupported(String mode) {
@@ -519,10 +570,16 @@ public final class StdMap {
 
         String url = createMapUrl();
         if (url == null) return;
-        StdDraw.setCanvasSize(StdMap.canvasWidth + StdMap.SIDEBAR_WIDTH, StdMap.canvasHeight);
-        StdDraw.setXscale(0, StdMap.canvasWidth + StdMap.SIDEBAR_WIDTH);
+        if(StdMap.infoboxOn) {
+            StdDraw.setCanvasSize(StdMap.canvasWidth + StdMap.infoboxWidth, StdMap.canvasHeight);
+            StdDraw.setXscale(0, StdMap.canvasWidth + StdMap.infoboxWidth);
+        }
+        else {
+            StdDraw.setCanvasSize(StdMap.canvasWidth, StdMap.canvasHeight);
+            StdDraw.setXscale(0, StdMap.canvasWidth);
+        }
         StdDraw.setYscale(0, StdMap.canvasHeight);
-        StdMap.drawInfobox();
+        if (StdMap.infoboxOn) StdMap.drawInfobox();
         StdDraw.enableDoubleBuffering();
         StdDraw.picture(StdMap.canvasWidth/2d, StdMap.canvasHeight/2d, url, StdMap.canvasWidth, StdMap.canvasHeight);
         StdDraw.show();
@@ -600,6 +657,9 @@ public final class StdMap {
     public static void setMapScreenSize(int width, int height) {
         StdMap.canvasWidth = width > 0? width : DEFAULT_MAP_WIDTH;
         StdMap.canvasHeight = height > 0? height : DEFAULT_MAP_HEIGHT;
+
+        StdMap.maxMessages = (StdMap.canvasHeight - 10) / 20;
+        while (StdMap.messages.size() > StdMap.maxMessages) StdMap.messages.pop();
     }
 
     public static void setTransportationMode(String mode) {
@@ -686,6 +746,15 @@ public final class StdMap {
             ps[i] = std.new Path(points[i][0], points[i][1], points[i][2], points[i][3]);
         }
         StdMap.setVisiblePaths(ps);
+    }
+
+    public static void showInfobox() {
+        StdMap.infoboxOn = true;
+    }
+    
+    public static void showInfobox(int width) {
+        StdMap.infoboxWidth = width;
+        StdMap.infoboxOn = true;
     }
 
     public static String supportedTransportationModes() {
